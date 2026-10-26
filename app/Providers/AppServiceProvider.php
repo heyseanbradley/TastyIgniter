@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\ApiResources\Transformers\OrderTransformer;
 use App\Http\Requests\AdminReservationRequest;
 use App\Http\Requests\ApiReservationRequest;
 use App\Http\Requests\OrderRequest;
+use Igniter\Api\ApiResources\Orders;
 use Igniter\Api\ApiResources\Requests\OrderRequest as TastyIgniterOrderRequest;
 use Igniter\Api\ApiResources\Requests\ReservationRequest as TastyIgniterReservationRequest;
+use Igniter\Api\ApiResources\Transformers\OrderTransformer as TastyIgniterOrderTransformer;
 use Igniter\Cart\Models\Order;
 use Igniter\Reservation\Http\Requests\ReservationRequest as TastyIgniterAdminReservationRequest;
 use Igniter\Reservation\Models\Reservation;
@@ -24,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TastyIgniterOrderRequest::class, OrderRequest::class);
         $this->app->bind(TastyIgniterReservationRequest::class, ApiReservationRequest::class);
         $this->app->bind(TastyIgniterAdminReservationRequest::class, AdminReservationRequest::class);
+        $this->app->bind(TastyIgniterOrderTransformer::class, OrderTransformer::class);
     }
 
     /**
@@ -43,5 +47,11 @@ class AppServiceProvider extends ServiceProvider
 
         Order::saving($blankGuestFields);
         Reservation::saving($blankGuestFields);
+
+        if (class_exists(Orders::class)) {
+            Orders::extend(function ($controller): void {
+                $controller->restConfig['transformer'] = OrderTransformer::class;
+            });
+        }
     }
 }
