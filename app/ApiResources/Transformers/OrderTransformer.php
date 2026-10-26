@@ -21,6 +21,8 @@ class OrderTransformer extends TastyIgniterOrderTransformer
         $payload = [
             'currency' => $this->currencyCode(),
             'order_totals' => $this->orderTotals($order),
+            // Skip getOrderMenusWithOptions() — it 500s on the in-memory
+            // model right after create, while a later GET of the same row works.
             'order_menus' => $this->orderMenus($order),
         ];
 
@@ -59,13 +61,9 @@ class OrderTransformer extends TastyIgniterOrderTransformer
     protected function orderMenus(Order $order): mixed
     {
         try {
-            return $order->getOrderMenusWithOptions();
+            return $order->getOrderMenus();
         } catch (Throwable) {
-            try {
-                return $order->getOrderMenus();
-            } catch (Throwable) {
-                return [];
-            }
+            return [];
         }
     }
 }
